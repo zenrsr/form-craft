@@ -36,6 +36,8 @@ import {
 import { FileUpload } from "@/components/ui/file-upload";
 import { Pickaxe, Trash } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface Field {
   id: string;
@@ -79,6 +81,23 @@ export default function MainSidebar() {
   const router = useRouter();
 
   const saveForm = async () => {
+    const hasEmailField = fields.some((field) => field.type === "email");
+
+    if (!hasEmailField) {
+      toast({
+        title: "Error",
+        description: "The form must contain at least one email field.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const session = (await supabase.auth.getSession()).data.session;
+
+    if (!session) {
+      throw new Error("No active session");
+    }
+
     const formData = {
       title: formTitle,
       description: formDescription,
@@ -88,7 +107,10 @@ export default function MainSidebar() {
     try {
       const res = await fetch("/api/forms/save", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify(formData),
       });
 
@@ -100,7 +122,7 @@ export default function MainSidebar() {
           description: "Your form has been saved.",
           variant: "default",
         });
-        router.push("/dashboard"); // Redirect to dashboard
+        router.push("/dashboard");
       } else {
         toast({
           title: "Failed to save form",
@@ -369,14 +391,14 @@ export default function MainSidebar() {
             <p>Rate on a scale of 1 to 5:</p>
             <div className="flex space-x-4">
               {[1, 2, 3, 4, 5].map((scale) => (
-                <label key={scale} className="flex items-center space-x-2">
-                  <input
+                <Label key={scale} className="flex items-center space-x-2">
+                  <Input
                     type="radio"
                     name={`scale-${field.id}`}
                     value={scale}
                   />
                   <span>{scale}</span>
-                </label>
+                </Label>
               ))}
             </div>
           </div>
@@ -565,21 +587,17 @@ export default function MainSidebar() {
                 onDragEnd={(result) => {
                   const { source, destination } = result;
 
-                  // If dropped outside the droppable area or at the same position
                   if (!destination || source.index === destination.index)
                     return;
 
                   // Reorder fields array
                   const updatedFields = Array.from(fields);
-                  const [movedField] = updatedFields.splice(source.index, 1); // Remove dragged item
-                  updatedFields.splice(destination.index, 0, movedField); // Insert at the new index
-                  setFields(updatedFields); // Update state
+                  const [movedField] = updatedFields.splice(source.index, 1);
+                  updatedFields.splice(destination.index, 0, movedField);
+                  setFields(updatedFields);
                 }}
               >
-                <Droppable
-                  droppableId="fields"
-                  isDropDisabled={false} // Ensure droppable is enabled
-                >
+                <Droppable droppableId="fields" isDropDisabled={false}>
                   {(provided) => (
                     <div
                       {...provided.droppableProps}
@@ -595,7 +613,7 @@ export default function MainSidebar() {
                           {(provided) => (
                             <div
                               ref={provided.innerRef}
-                              {...provided.draggableProps} // Attach draggable props
+                              {...provided.draggableProps}
                               {...provided.dragHandleProps} // Attach handle props for the ribbon
                               className="p-4 bg-gray-50 border rounded relative flex items-center"
                             >
@@ -607,7 +625,6 @@ export default function MainSidebar() {
                                 ||
                               </div>
 
-                              {/* Field Content */}
                               <div className="flex-1 pl-4">
                                 <div className="flex justify-between items-center mb-2">
                                   <Input
@@ -631,7 +648,6 @@ export default function MainSidebar() {
                                 {renderField(field)}
                               </div>
 
-                              {/* Delete Button */}
                               <Button
                                 variant="destructive"
                                 onClick={() => deleteField(field.id)}

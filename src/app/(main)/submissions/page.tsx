@@ -4,12 +4,6 @@
 import React, { useEffect, useState } from "react";
 
 import {
-  IconArrowLeft,
-  IconBrandTabler,
-  IconSettings,
-  IconUserBolt,
-} from "@tabler/icons-react";
-import {
   Table,
   TableBody,
   TableCaption,
@@ -20,8 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/lib/supabaseClient";
 
 interface Submission {
   id: string;
@@ -37,37 +31,6 @@ interface FormWithSubmissions {
   submissions: Submission[];
 }
 
-const links = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: (
-      <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Submissions",
-    href: "/submissions",
-    icon: (
-      <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: (
-      <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Logout",
-    href: "#",
-    icon: (
-      <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-];
-
 export default function SubmissionsPage() {
   const [formsWithSubmissions, setFormsWithSubmissions] = useState<
     FormWithSubmissions[]
@@ -77,7 +40,20 @@ export default function SubmissionsPage() {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const res = await fetch("/api/forms/submissions");
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session) {
+          console.error("No user session found.");
+          return;
+        }
+
+        const userId = session.user.id;
+        const res = await fetch(`/api/forms/submissions?userId=${userId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
         const data = await res.json();
 
         if (res.ok) {

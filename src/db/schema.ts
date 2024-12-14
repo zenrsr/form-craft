@@ -10,21 +10,22 @@ import {
 
 // Forms Table
 export const forms = pgTable("forms", {
-  id: serial("id").primaryKey(), // Auto-incrementing primary key
-  title: text("title").notNull(), // Form title
-  description: text("description").notNull(), // Form description
-  fields: jsonb("fields").notNull(), // JSON to store form fields
+  id: serial("id").primaryKey(),
+  userId: uuid("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  fields: jsonb("fields").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  urlId: uuid("url_id").defaultRandom().notNull(), // Unique URL identifier
+  urlId: uuid("url_id").defaultRandom().notNull(), // Auto-generate valid UUID
 });
 
 // Submissions Table
 export const submissions = pgTable("submissions", {
-  id: uuid("id").primaryKey(), // Primary key as UUID
+  id: uuid("id").primaryKey(),
   formId: integer("form_id")
     .notNull()
-    .references(() => forms.id), // Foreign key to forms
-  email: text("email").notNull(), // Email of the respondent
-  responses: jsonb("responses").notNull(), // Stores responses as JSON
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(), // Submission timestamp
+    .references(() => forms.id, { onDelete: "cascade", onUpdate: "cascade" }),
+  email: text("email").notNull(),
+  responses: jsonb("responses").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

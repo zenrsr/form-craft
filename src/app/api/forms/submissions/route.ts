@@ -3,14 +3,22 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
 import { forms, submissions } from "@/db/schema";
 
-export async function GET() {
-  try {
-    // Fetch all forms
-    const allForms = await db.select().from(forms);
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const userId = url.searchParams.get("userId");
 
-    // Fetch submissions for each form
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const userForms = await db
+      .select()
+      .from(forms)
+      .where(eq(forms.userId, userId));
+
     const formsWithSubmissions = await Promise.all(
-      allForms.map(async (form) => {
+      userForms.map(async (form) => {
         const formSubmissions = await db
           .select()
           .from(submissions)
@@ -25,7 +33,7 @@ export async function GET() {
             responses:
               typeof submission.responses === "string"
                 ? JSON.parse(submission.responses)
-                : submission.responses, // Safely parse JSON
+                : submission.responses,
             createdAt: submission.createdAt,
           })),
         };

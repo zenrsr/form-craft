@@ -22,6 +22,20 @@
       "when": 1734099277904,
       "tag": "0002_greedy_mikhail_rasputin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1734152984039,
+      "tag": "0003_old_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1734164634473,
+      "tag": "0004_lowly_energizer",
+      "breakpoints": true
     }
   ]
 }

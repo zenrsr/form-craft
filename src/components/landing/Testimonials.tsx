@@ -13,31 +13,31 @@ import {
 const testimonials = [
   {
     name: "Alice Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/placeholder.png?height=40&width=40",
     role: "Marketing Manager",
     quote:
       "FormCraft has revolutionized our data collection process. It's intuitive and powerful!",
   },
   {
     name: "Bob Smith",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/placeholder.png?height=40&width=40",
     role: "Small Business Owner",
     quote:
       "I've tried many form builders, but FormCraft is by far the easiest to use. Highly recommended!",
   },
   {
-    name: "Carol Davis",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "Event Coordinator",
-    quote:
-      "The customizable themes in FormCraft have helped us create on-brand forms for all our events.",
-  },
-  {
     name: "David Wilson",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/placeholder.png?height=40&width=40",
     role: "HR Specialist",
     quote:
       "FormCraft's advanced features have streamlined our hiring process. It's a game-changer!",
+  },
+  {
+    name: "Emily Davis",
+    avatar: "/placeholder.png?height=40&width=40",
+    role: "Product Manager",
+    quote:
+      "FormCraft's drag-and-drop interface makes form creation a breeze. It's user-friendly and visually appealing.",
   },
 ];
 

@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FileUpload } from "@/components/ui/file-upload";
+import { Label } from "@/components/ui/label";
 
 hatch.register();
 
@@ -28,6 +29,11 @@ export default function PublicFormPage() {
   const [loading, setLoading] = useState(true);
   const [responses, setResponses] = useState<{ [key: string]: any }>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    console.log("Responses:", responses);
+    console.log("Errors:", errors);
+  }, [responses, errors]);
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -52,18 +58,6 @@ export default function PublicFormPage() {
 
     fetchForm();
   }, [urlId]);
-
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-    form?.fields.forEach((field: any) => {
-      if (field.required && !responses[field.id]) {
-        newErrors[field.id] = `${field.label} is required.`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
-  };
 
   const cleanResponses = Object.fromEntries(
     Object.entries(responses).map(([key, value]) => {
@@ -141,13 +135,45 @@ export default function PublicFormPage() {
   const generateKey = (field: { id: string; label: string }) =>
     `${field.id}_${sanitizeLabel(field.label)}`;
 
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    form?.fields.forEach((field: any) => {
+      const key = generateKey(field);
+      const value = responses[key];
+
+      // Skip validation for Form Heading or any other specific type
+      if (field.type === "heading") {
+        return;
+      }
+
+      if (field.required) {
+        if (
+          (field.type === "checkbox" && (!value || value.length === 0)) || // Checkbox validation
+          !value // General validation
+        ) {
+          newErrors[key] = `${field.label} is required.`;
+        }
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // No errors = validation passes
+  };
+
   const handleFieldChange = (
     field: { id: string; label: string },
     value: any
   ) => {
     const key = generateKey(field);
     setResponses((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: "" })); // Clear errors for the field
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (value && newErrors[key]) {
+        delete newErrors[key]; // Remove the error for the field if valid
+      }
+      return newErrors;
+    });
   };
 
   const handleFieldBlur = (
@@ -156,8 +182,11 @@ export default function PublicFormPage() {
     required: boolean
   ) => {
     const key = generateKey(field);
-    if (required && !value) {
-      setErrors((prev) => ({ ...prev, [key]: `${field.label} is required.` }));
+    if (required && (!value || (Array.isArray(value) && value.length === 0))) {
+      setErrors((prev) => ({
+        ...prev,
+        [key]: `${field.label} is required.`,
+      }));
     } else {
       setErrors((prev) => ({ ...prev, [key]: "" }));
     }
@@ -323,6 +352,28 @@ export default function PublicFormPage() {
       case "file_upload":
         return (
           <FileUpload onChange={(file) => handleFieldChange(field, file)} />
+        );
+      case "scale":
+        return (
+          <div>
+            <p>Rate on a scale of 1 to 5:</p>
+            <div className="flex space-x-4">
+              {[1, 2, 3, 4, 5].map((scale) => (
+                <Label key={scale} className="flex items-center space-x-2">
+                  <Input
+                    type="radio"
+                    name={`scale-${field.id}`}
+                    value={scale}
+                    onChange={(e) => handleFieldChange(field, e.target.value)}
+                    onBlur={() =>
+                      handleFieldBlur(field, responses[key], field.required)
+                    }
+                  />
+                  <span>{scale}</span>
+                </Label>
+              ))}
+            </div>
+          </div>
         );
       default:
         return <p>Unsupported field type</p>;

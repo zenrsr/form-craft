@@ -1,24 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  IconArrowLeft,
-  IconBrandTabler,
-  IconSettings,
-  IconUserBolt,
-} from "@tabler/icons-react";
-
-import Image from "next/image";
-import { cn } from "@/lib/utils";
-import {
-  DashboardSidebar,
-  SidebarBody,
-  SidebarLink,
-} from "@/components/dashboard-sidebar/dashboard-sidebar";
-import { Copy, Edit, Pickaxe, PlusCircle, Trash } from "lucide-react";
+import { Copy, Edit, PlusCircle, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabaseClient";
 
 interface FormField {
   id: string;
@@ -38,47 +25,28 @@ export interface Form {
   createdAt: string;
 }
 
-const Dashboardlinks = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: (
-      <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Submissions",
-    href: "/submissions",
-    icon: (
-      <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: (
-      <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Logout",
-    href: "#",
-    icon: (
-      <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-];
-
 export function SidebarDemo() {
   const router = useRouter();
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [open, setOpen] = useState(false);
-
   const fetchForms = async () => {
     try {
-      const res = await fetch("/api/forms/list");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        console.error("No user session found.");
+        return;
+      }
+
+      const userId = session.user.id;
+
+      const res = await fetch(`/api/forms/list?userId=${userId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
       const data = await res.json();
 
       if (res.ok) {
@@ -102,23 +70,26 @@ export function SidebarDemo() {
     try {
       const res = await fetch(`/api/forms/${id}`, { method: "DELETE" });
 
-      if (res.ok) {
-        toast({
-          title: "Form deleted",
-          description: "The form was successfully deleted.",
-          variant: "default",
-        });
-        // Fetch updated forms
-        fetchForms();
-      } else {
+      if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to delete the form.");
+        console.log("API Error Response:", data);
+        throw new Error(data.message || "Failed to delete the form.");
       }
+      setForms((prevForms) => prevForms.filter((form) => form.id !== id));
+
+      toast({
+        title: "Form deleted",
+        description: "The form was successfully deleted.",
+        variant: "default",
+      });
+
+      // Refetch the forms after deletion
+      fetchForms();
     } catch (error) {
-      console.error("Error deleting form:", error);
+      console.log("Error deleting form:", error);
       toast({
         title: "Error",
-        description: "Failed to delete the form.",
+        description: `Failed to delete the form. ${error}`,
         variant: "destructive",
       });
     }
@@ -126,9 +97,18 @@ export function SidebarDemo() {
 
   const duplicateForm = async (form: Form) => {
     try {
+      const session = (await supabase.auth.getSession()).data.session;
+
+      if (!session) {
+        throw new Error("No active session");
+      }
+
       const res = await fetch("/api/forms/save", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           title: `${form.title} (Copy)`,
           description: form.description,

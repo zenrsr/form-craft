@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { forms } from "@/db/schema";
+import { forms, submissions } from "@/db/schema";
 import { db } from "@/db/db";
 
 export async function GET(
@@ -85,29 +85,35 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-
   const numericId = Number(id);
+
   if (isNaN(numericId)) {
     return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
   }
 
   try {
+    // First, delete submissions related to the form
+    await db
+      .delete(submissions)
+      .where(eq(submissions.formId, numericId))
+      .execute();
+
+    // Then, delete the form itself
     const result = await db
       .delete(forms)
       .where(eq(forms.id, numericId))
-      .execute();
+      .returning();
 
-    // Check if rows were affected (form existed)
-    if (result.length !== 0) {
+    if (result[0].id !== numericId) {
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
     return NextResponse.json(
-      { message: "Form deleted successfully." },
+      { message: "Form and associated submissions deleted successfully." },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error deleting form:", error);
+    console.error("Error deleting form and submissions:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

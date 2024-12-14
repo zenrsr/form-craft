@@ -1,7 +1,10 @@
+"use client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
+  const router = useRouter();
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -29,8 +32,21 @@ export default function Header() {
           </Link>
         </nav>
         <div className="flex space-x-2">
-          <Button variant="outline">Log In</Button>
-          <Button>Sign Up</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              router.push("/auth/login");
+            }}
+          >
+            Log In
+          </Button>
+          <Button
+            onClick={() => {
+              router.push("/auth/signup");
+            }}
+          >
+            Sign Up
+          </Button>
         </div>
       </div>
     </header>

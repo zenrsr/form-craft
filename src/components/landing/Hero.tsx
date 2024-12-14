@@ -11,8 +11,8 @@ export default function Hero() {
             Build Dynamic Forms in Minutes
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-gray-600 animate-fade-in-delay-1">
-            Simplify data collection with drag-and-drop tools, real-time
-            previews, and customizable themes.
+            Simplify data collection with drag-and-drop tools, and real-time
+            previews.
           </p>
           <Link href={"/dashboard"}>
             <Button size="lg" className="animate-fade-in-delay-2">

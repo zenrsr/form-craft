@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropletsIcon as DragDropIcon,
   EyeIcon,
-  PaletteIcon,
-  BellIcon,
+  Cctv,
+  Fingerprint,
 } from "lucide-react";
 
 const features = [
@@ -22,16 +22,16 @@ const features = [
     description: "See your changes instantly with our live preview feature.",
   },
   {
-    icon: <PaletteIcon className="h-8 w-8 text-blue-500" />,
-    title: "Customizable themes",
+    icon: <Fingerprint className="h-8 w-8 text-blue-500" />,
+    title: "Reliable security",
     description:
-      "Choose from a variety of themes or create your own to match your brand.",
+      "Rest assured with our robust security measures to protect clients sensitive data.",
   },
   {
-    icon: <BellIcon className="h-8 w-8 text-blue-500" />,
-    title: "Advanced notifications",
+    icon: <Cctv className="h-8 w-8 text-blue-500" />,
+    title: "Supervise Submissions",
     description:
-      "Set up custom notifications for form submissions and user interactions.",
+      "Manage and analyze your form submissions with our user-friendly dashboard.",
   },
 ];
 

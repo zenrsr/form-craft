@@ -1,9 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  PlusCircleIcon,
-  PaintbrushIcon as PaintBrushIcon,
-  RocketIcon,
-} from "lucide-react";
+import { PlusCircleIcon, RocketIcon, Sheet } from "lucide-react";
 
 const steps = [
   {
@@ -12,14 +8,14 @@ const steps = [
     description: "Build forms with drag-and-drop tools",
   },
   {
-    icon: <PaintBrushIcon className="h-12 w-12 text-blue-500" />,
-    title: "Customize",
-    description: "Apply themes and adjust settings",
-  },
-  {
     icon: <RocketIcon className="h-12 w-12 text-blue-500" />,
     title: "Deploy",
     description: "Share forms and collect responses",
+  },
+  {
+    icon: <Sheet className="h-12 w-12 text-blue-500" />,
+    title: "Export",
+    description: "Export your forms in CSV formats.",
   },
 ];
 
