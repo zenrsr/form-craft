@@ -49,7 +49,7 @@ export async function PUT(
   const body = await req.json();
   const { title, description, fields } = body;
 
-  if (!title || !description || !Array.isArray(fields)) {
+  if (!title || !Array.isArray(fields)) {
     return NextResponse.json(
       { error: "Invalid input. Title, description, and fields are required." },
       { status: 400 }

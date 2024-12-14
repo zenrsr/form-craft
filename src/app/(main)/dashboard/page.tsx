@@ -2,11 +2,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Copy, Edit, PlusCircle, Trash } from "lucide-react";
+import { Car, Copy, Edit, PlusCircle, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface FormField {
   id: string;
@@ -24,6 +25,7 @@ export interface Form {
   fields: FormField[]; // Added fields property
   urlId: string;
   createdAt: string;
+  submissionCount: number;
 }
 
 export function SidebarDemo() {
@@ -113,11 +115,13 @@ export function SidebarDemo() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: `${form.title} (Copy)`,
+          title: `${form.title} - Copy ${Date.now()}`,
           description: form.description,
           fields: form.fields,
         }),
       });
+
+      console.log({ res });
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -133,6 +137,7 @@ export function SidebarDemo() {
 
       await fetchForms(); // Fetch updated forms after duplication
     } catch (error) {
+      console.log("Error duplicating form:", error);
       console.error("Error duplicating form:", error);
       toast({
         title: "Error",
@@ -181,6 +186,13 @@ export function SidebarDemo() {
                     </a>
                   </p>
                 </div>
+                <Card className="h-12 w-32 flex justify-center items-center p-2">
+                  <p className="font-semibold text-[12px]">Form Submissions</p>
+                  <p className="rounded-xl  font-semibold text-[18px]">
+                    {" "}
+                    {form.submissionCount}
+                  </p>
+                </Card>
                 <div className="flex gap-2">
                   <Button
                     variant="secondary"

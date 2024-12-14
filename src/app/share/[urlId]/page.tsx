@@ -70,6 +70,8 @@ export default function PublicFormPage() {
     })
   );
 
+  console.log("Cleaned responses:", cleanResponses);
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       toast({
@@ -129,11 +131,13 @@ export default function PublicFormPage() {
     );
   }
 
-  const sanitizeLabel = (label: string) =>
-    label.replace(/\s+/g, "_").replace(/[^\w-]/g, "");
-
-  const generateKey = (field: { id: string; label: string }) =>
-    `${field.id}_${sanitizeLabel(field.label)}`;
+  const generateKey = (field: { id: string; label: string }) => {
+    // Uniform key generation for fields
+    const sanitizedLabel = field.label
+      .replace(/\s+/g, "_") // Replace spaces with underscores
+      .replace(/[^\w-]/g, ""); // Remove special characters
+    return `${field.id}_${sanitizedLabel}`;
+  };
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -142,7 +146,7 @@ export default function PublicFormPage() {
       const key = generateKey(field);
       const value = responses[key];
 
-      // Skip validation for Form Heading or any other specific type
+      // Skip validation for specific field types
       if (field.type === "heading") {
         return;
       }
@@ -158,7 +162,7 @@ export default function PublicFormPage() {
     });
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // No errors = validation passes
+    return Object.keys(newErrors).length === 0; // Validation passes if no errors
   };
 
   const handleFieldChange = (

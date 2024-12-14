@@ -75,7 +75,7 @@ export default function SubmissionsPage() {
 
   useEffect(() => {
     fetchSubmissions();
-  });
+  }, []);
 
   if (loading) {
     return <p>Loading submissions...</p>;

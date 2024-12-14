@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   IconArrowLeft,
   IconBrandTabler,
@@ -16,6 +16,7 @@ import {
 } from "@/components/dashboard-sidebar/dashboard-sidebar";
 import { Pickaxe } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface FormField {
   id: string;
@@ -35,34 +36,66 @@ export interface Form {
   createdAt: string;
 }
 
-const Dashboardlinks = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: (
-      <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-  {
-    label: "Submissions",
-    href: "/submissions",
-    icon: (
-      <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-
-  {
-    label: "Logout",
-    href: "#",
-    icon: (
-      <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-    ),
-  },
-];
-
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Error fetching user:", error);
+        return;
+      }
+
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      } else {
+        console.error("No email found in session.");
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error during logout:", error);
+    } else {
+      router.push("/auth/login"); // Redirect to login page
+    }
+  };
+
+  const Dashboardlinks = [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: (
+        <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Submissions",
+      href: "/submissions",
+      icon: (
+        <IconUserBolt className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Logout",
+      href: "/auth/login",
+      icon: (
+        <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <div
@@ -95,8 +128,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
           <div>
             <SidebarLink
+              className="truncate"
               link={{
-                label: "Manu Arora",
+                label: userEmail || "User Email",
                 href: "#",
                 icon: (
                   <Image

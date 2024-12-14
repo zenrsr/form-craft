@@ -28,32 +28,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Form not found." }, { status: 404 });
     }
 
-    // Extract the ID portion from combined keys
-    const extractFieldId = (key: string) => key.split("_")[0];
-
-    // Create a map of form fields for efficient lookup by ID
-    const fieldsMap = Object.fromEntries(
-      form.fields.map((field: any) => [field.id, field])
-    );
-
-    // Find the email field in the responses
-    const emailField = Object.entries(responses).find(([key, value]) => {
-      const fieldId = extractFieldId(key); // Extract the original field ID
-      const field = fieldsMap[fieldId]; // Get the corresponding field
-      return field?.type === "email" && value; // Check if it's an email field with a value
-    });
-
-    if (!emailField) {
-      console.error("Email field not found. Responses:", responses);
-      console.error("Form Fields:", form.fields);
+    // Ensure that responses contain at least one field (email)
+    const responseEntries = Object.entries(responses);
+    if (responseEntries.length < 1) {
+      console.error("Email field missing in responses:", responses);
       return NextResponse.json(
         { error: "Submission requires a valid email field." },
         { status: 400 }
       );
     }
 
-    const email = emailField[1] as string; // Extract the email value
+    // Assume email is the first field in responses
+    const email = responseEntries[0][1] as string;
 
+    if (!email || typeof email !== "string") {
+      console.error("Invalid email in responses:", responses);
+      return NextResponse.json(
+        { error: "Submission requires a valid email field." },
+        { status: 400 }
+      );
+    }
+
+    // Check for duplicate submissions
     const duplicate = await db
       .select()
       .from(submissions)
@@ -69,6 +65,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Save the submission
     const submissionId = uuidv4();
     await db.insert(submissions).values({
       id: submissionId,

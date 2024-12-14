@@ -23,8 +23,6 @@ export async function GET(req: Request) {
       return NextResponse.json([], { status: 200 }); // No forms found
     }
 
-    console.log("User Forms Fetched:", userForms);
-
     // Map forms to include their submissions
     const formsWithSubmissions = await Promise.all(
       userForms.map(async (form) => {

@@ -1,27 +1,48 @@
 import { db } from "@/db/db";
-import { forms } from "@/db/schema";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { desc, eq } from "drizzle-orm";
+import { forms, submissions } from "@/db/schema";
+import { fetchSession } from "@/lib/supabaseSessionHelper";
+import { desc, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-
-  const { data: session } = await supabase.auth.getSession();
-  if (!session.session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await fetchSession();
+  if (!session) {
+    console.error("No user session found.");
+    return NextResponse.json(
+      { error: "No user session found" },
+      { status: 401 }
+    );
   }
 
-  console.log("Session from api/forms/list:", session);
+  try {
+    // Fetch user forms
+    const userForms = await db
+      .select({
+        id: forms.id,
+        title: forms.title,
+        description: forms.description,
+        urlId: forms.urlId,
+        createdAt: forms.createdAt,
+        submissionCount: sql<number>`COUNT(${submissions.id})`,
+      })
+      .from(forms)
+      .leftJoin(submissions, eq(forms.id, submissions.formId))
+      .where(eq(forms.userId, session.id))
+      .groupBy(
+        forms.id,
+        forms.title,
+        forms.description,
+        forms.urlId,
+        forms.createdAt
+      )
+      .orderBy(desc(forms.createdAt));
 
-  const userForms = await db
-    .select()
-    .from(forms)
-    .where(eq(forms.userId, session.session?.user.id))
-    .orderBy(desc(forms.createdAt));
-
-  console.log("User Forms Fetched from backend:", userForms);
-
-  return NextResponse.json(userForms);
+    return NextResponse.json(userForms);
+  } catch (dbError) {
+    console.error("Error fetching forms:", dbError);
+    return NextResponse.json(
+      { error: "Failed to fetch forms" },
+      { status: 500 }
+    );
+  }
 }
