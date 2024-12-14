@@ -1,5 +1,3 @@
-// src/app/api/forms/save/route.ts
-
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/db/db";
@@ -24,8 +22,8 @@ export async function POST(req: Request) {
       );
     }
 
+    // Fetch session using helper
     const session = await fetchSession();
-
     if (!session) {
       console.error("Session Error in POST API:");
       return NextResponse.json(
@@ -36,8 +34,7 @@ export async function POST(req: Request) {
 
     // Parse request body
     const { title, description, fields } = await req.json();
-
-    if (!title || !fields) {
+    if (!title || !fields || fields.length === 0) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
@@ -45,14 +42,17 @@ export async function POST(req: Request) {
     const userId = session.id;
 
     // Save the form in the database
-    const newForm = await db.insert(forms).values({
-      title,
-      description,
-      fields,
-      userId,
-    });
+    const newForm = await db
+      .insert(forms)
+      .values({
+        title,
+        description: description || "",
+        fields,
+        userId,
+      })
+      .returning();
 
-    return NextResponse.json({ success: true, form: newForm });
+    return NextResponse.json({ success: true, form: newForm[0] });
   } catch (error) {
     console.error("Error saving form:", error);
     return NextResponse.json({ error: "Failed to save form" }, { status: 500 });

@@ -2,27 +2,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Car, Copy, Edit, PlusCircle, Trash } from "lucide-react";
+import { Copy, Edit, PlusCircle, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface FormField {
-  id: string;
-  type: string;
-  label: string;
-  required: boolean;
-  options?: string[];
-  price?: number;
-}
+import { Card } from "@/components/ui/card";
 
 export interface Form {
   id: number;
   title: string;
   description: string;
-  fields: FormField[]; // Added fields property
+  fields: any[]; // Added fields property
   urlId: string;
   createdAt: string;
   submissionCount: number;
@@ -109,35 +100,42 @@ export function SidebarDemo() {
 
   const duplicateForm = async (form: Form) => {
     try {
+      const formData = {
+        title: form.title + " (Copy)",
+        description: form.description,
+        fields: form.fields,
+      };
+
       const res = await fetch("/api/forms/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title: `${form.title} - Copy ${Date.now()}`,
-          description: form.description,
-          fields: form.fields,
-        }),
+        body: JSON.stringify(formData),
       });
 
-      console.log({ res });
+      console.log("Duplicate Form Response:", res);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Error duplicating form:", errorData.error);
-        throw new Error(errorData.error || "Failed to duplicate the form.");
+      const data = await res.json();
+      console.log("Duplicate Form Response data:", data);
+
+      if (res.ok) {
+        const result = await res.json();
+        console.log("Duplicate Form Result:", result);
+
+        toast({
+          title: "Form duplicated",
+          description: "The form was successfully duplicated.",
+          variant: "default",
+        });
+
+        await fetchForms(); // Refresh forms
       }
 
-      toast({
-        title: "Form duplicated",
-        description: "The form was successfully duplicated.",
-        variant: "default",
-      });
-
-      await fetchForms(); // Fetch updated forms after duplication
+      const errorData = await res.json();
+      console.error("Error duplicating form:", errorData.error);
+      throw new Error(errorData.error || "Failed to duplicate the form.");
     } catch (error) {
-      console.log("Error duplicating form:", error);
       console.error("Error duplicating form:", error);
       toast({
         title: "Error",
@@ -182,7 +180,7 @@ export function SidebarDemo() {
                       rel="noopener noreferrer"
                       className="text-blue-500 underline"
                     >
-                      https://localhost:3000/share/{form.urlId}
+                      https://form-craft-eight.vercel.app/share/{form.urlId}
                     </a>
                   </p>
                 </div>
