@@ -76,7 +76,12 @@ export default function SignupPage() {
         password: values.password,
       });
 
-      console.log("Sign-up Data:", data);
+      console.log("Sign-up Data from frontend:", data);
+
+      const { session } = data;
+      if (session) {
+        document.cookie = `sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF}-auth-token=${session.access_token}; Path=/; Secure; HttpOnly; SameSite=Strict`;
+      }
 
       if (error) {
         console.error("Sign-up Error:", error.message);
@@ -87,22 +92,12 @@ export default function SignupPage() {
         });
       }
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: values.email }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate token");
-      }
-
       toast({
         title: "Sign-up Successful",
-        description: "Check your email for confirmation.",
+        description: "Check your email for confirmation or Login in Continue",
       });
 
-      router.push("/dashboard");
+      router.push("/auth/login");
     } catch (err) {
       console.log("Unexpected Error:", err);
       console.error("Unexpected Error:", err);

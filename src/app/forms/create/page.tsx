@@ -37,7 +37,6 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { Pickaxe, Trash } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabaseClient";
 
 export interface Field {
   id: string;
@@ -92,10 +91,15 @@ export default function MainSidebar() {
       return;
     }
 
-    const session = (await supabase.auth.getSession()).data.session;
+    const token = localStorage.getItem("auth-token"); // Retrieve token from local storage
 
-    if (!session) {
-      throw new Error("No active session");
+    if (!token) {
+      toast({
+        title: "Unauthorized",
+        description: "You must be logged in to save the form.",
+        variant: "destructive",
+      });
+      return;
     }
 
     const formData = {
@@ -109,7 +113,7 @@ export default function MainSidebar() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });

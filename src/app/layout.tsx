@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import localFont from "next/font/local";
@@ -5,7 +6,6 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -23,46 +23,33 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [_isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const token = localStorage.getItem("auth-token");
 
-      if (session) {
-        setIsAuthenticated(true);
-      } else {
+      const isUnprotectedRoute =
+        pathname === "/" ||
+        pathname.startsWith("/auth") ||
+        pathname.startsWith("/share");
+
+      if (!token && !isUnprotectedRoute) {
+        router.replace("/auth/login");
         setIsAuthenticated(false);
+      } else {
+        setIsAuthenticated(true);
       }
     };
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-          if (!pathname.startsWith("/auth") && !pathname.startsWith("/share")) {
-            router.replace("/auth/signup");
-          }
-        }
-      }
-    );
 
     checkSession();
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
   }, [router, pathname]);
 
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
-  }
+  // if (isAuthenticated === null) {
+  //   return <p>Loading...</p>;
+  // }
 
   return (
     <html lang="en">

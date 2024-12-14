@@ -1,34 +1,29 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import type { NextRequest } from "next/server";
-
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+import type { NextRequest } from "next/server"; // Import the correct type for NextRequest
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
 export async function middleware(req: NextRequest) {
-  const unprotectedPaths = ["/auth/signup", "/auth/login", "/share", "/"];
-  const path = req.nextUrl.pathname;
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-  // Allow unprotected routes
-  if (
-    unprotectedPaths.some((unprotectedPath) => path.startsWith(unprotectedPath))
-  ) {
-    return NextResponse.next();
+  // Retrieve the session from Supabase
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Redirect to the login page if no session exists
+  if (!session) {
+    const path = req.nextUrl.pathname;
+    if (
+      !path.startsWith("/auth") &&
+      !path.startsWith("/share") &&
+      path !== "/"
+    ) {
+      return NextResponse.redirect(new URL("/auth/login", req.url));
+    }
   }
 
-  const authToken = req.cookies.get("auth-token")?.value;
-
-  if (!authToken) {
-    return NextResponse.redirect(new URL("/auth/login", req.url));
-  }
-
-  try {
-    jwt.verify(authToken, JWT_SECRET!);
-  } catch (err) {
-    console.error("Invalid JWT:", err);
-    return NextResponse.redirect(new URL("/auth/login", req.url));
-  }
-
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {

@@ -29,6 +29,7 @@ import { Header } from "@/components/shared/Header";
 import { SocialLogin } from "@/components/shared/SocialLogin";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -52,29 +53,53 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
 
       if (error) {
-        throw error;
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
 
+      // Call the API to set the auth token
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: values.email }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data,
+        }),
       });
 
-      console.log({ response });
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully.",
+        });
 
-      if (!response.ok) throw new Error("Failed to generate token");
-
-      router.push("/dashboard");
-    } catch (error: any) {
-      console.error("Error logging in:", error.message);
-      alert("Failed to log in. Please check your credentials.");
+        // Redirect to dashboard after login
+        router.push("/dashboard");
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to set auth token.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      toast({
+        title: "Error",
+        description: "Failed to log in. Please check your credentials.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

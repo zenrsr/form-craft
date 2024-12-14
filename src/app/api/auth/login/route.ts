@@ -1,26 +1,29 @@
-import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+// src/app/api/auth/login/route.ts
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { email } = await req.json();
+  const { data } = await req.json();
 
-  // Validate input
-  if (!email)
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  console.log("Login Data from backend:", data);
 
-  // Generate JWT
-  const token = jwt.sign({ email }, JWT_SECRET!, { expiresIn: "7d" });
+  const { session } = data;
 
-  // Set HTTP-only cookie
-  const response = NextResponse.json({ success: true });
-  response.cookies.set("auth-token", token, {
-    httpOnly: true,
-    // secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  if (session) {
+    const response = NextResponse.json({ success: true });
 
-  return response;
+    // Set the auth cookie in the response
+    response.cookies.set({
+      name: `sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF}-auth-token`,
+      value: session.access_token,
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return response;
+  }
+
+  return NextResponse.json({ error: "No session found." }, { status: 401 });
 }

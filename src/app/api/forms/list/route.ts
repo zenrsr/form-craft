@@ -1,32 +1,27 @@
 import { db } from "@/db/db";
 import { forms } from "@/db/schema";
-import { NextResponse } from "next/server";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 import { desc, eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: Request) {
-  try {
-    const url = new URL(req.url);
-    const userId = url.searchParams.get("userId");
+export async function GET(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required to fetch forms" },
-        { status: 400 }
-      );
-    }
-
-    const userForms = await db
-      .select()
-      .from(forms)
-      .where(eq(forms.userId, userId))
-      .orderBy(desc(forms.createdAt));
-
-    return NextResponse.json(userForms);
-  } catch (error) {
-    console.error("Error fetching forms:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch forms" },
-      { status: 500 }
-    );
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  console.log("Session from api/forms/list:", session);
+
+  const userForms = await db
+    .select()
+    .from(forms)
+    .where(eq(forms.userId, session.session?.user.id))
+    .orderBy(desc(forms.createdAt));
+
+  console.log("User Forms Fetched from backend:", userForms);
+
+  return NextResponse.json(userForms);
 }

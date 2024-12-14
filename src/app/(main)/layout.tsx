@@ -17,7 +17,7 @@ import {
 import { Pickaxe } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-interface FormField {
+export interface FormField {
   id: string;
   type: string;
   label: string;

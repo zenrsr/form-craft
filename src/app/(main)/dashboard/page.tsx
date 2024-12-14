@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -28,34 +29,43 @@ export interface Form {
 export function SidebarDemo() {
   const router = useRouter();
   const [forms, setForms] = useState<Form[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchForms = async () => {
+    setLoading(true);
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (!session) {
-        console.error("No user session found.");
-        return;
+        toast({
+          title: "Error",
+          description: "No session found.",
+          variant: "destructive",
+        });
+        router.push("/auth/login");
       }
 
-      const userId = session.user.id;
-
-      const res = await fetch(`/api/forms/list?userId=${userId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch("/api/forms/list", {
+        headers: {
+          Authorization: `Bearer ${session!.access_token}`,
+        },
       });
-      const data = await res.json();
 
+      const data = await res.json();
       if (res.ok) {
         setForms(data);
       } else {
-        console.error("Error fetching forms:", data.error);
+        throw new Error(data.error || "Failed to fetch forms.");
       }
     } catch (error) {
       console.error("Error fetching forms:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load forms.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -71,10 +81,11 @@ export function SidebarDemo() {
       const res = await fetch(`/api/forms/${id}`, { method: "DELETE" });
 
       if (!res.ok) {
-        const data = await res.json();
-        console.log("API Error Response:", data);
-        throw new Error(data.message || "Failed to delete the form.");
+        const errorData = await res.json();
+        console.error("API Error Response:", errorData);
+        throw new Error(errorData.message || "Failed to delete the form.");
       }
+
       setForms((prevForms) => prevForms.filter((form) => form.id !== id));
 
       toast({
@@ -83,10 +94,9 @@ export function SidebarDemo() {
         variant: "default",
       });
 
-      // Refetch the forms after deletion
-      fetchForms();
+      await fetchForms(); // Refetch forms to ensure state consistency
     } catch (error) {
-      console.log("Error deleting form:", error);
+      console.error("Error deleting form:", error);
       toast({
         title: "Error",
         description: `Failed to delete the form. ${error}`,
@@ -97,17 +107,10 @@ export function SidebarDemo() {
 
   const duplicateForm = async (form: Form) => {
     try {
-      const session = (await supabase.auth.getSession()).data.session;
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
       const res = await fetch("/api/forms/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           title: `${form.title} (Copy)`,
@@ -116,17 +119,19 @@ export function SidebarDemo() {
         }),
       });
 
-      if (res.ok) {
-        toast({
-          title: "Form duplicated",
-          description: "The form was successfully duplicated.",
-          variant: "default",
-        });
-        // Fetch updated forms
-        fetchForms();
-      } else {
-        throw new Error("Failed to duplicate the form.");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Error duplicating form:", errorData.error);
+        throw new Error(errorData.error || "Failed to duplicate the form.");
       }
+
+      toast({
+        title: "Form duplicated",
+        description: "The form was successfully duplicated.",
+        variant: "default",
+      });
+
+      await fetchForms(); // Fetch updated forms after duplication
     } catch (error) {
       console.error("Error duplicating form:", error);
       toast({

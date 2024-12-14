@@ -37,44 +37,45 @@ export default function SubmissionsPage() {
   >([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+  const fetchSubmissions = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-        if (!session) {
-          console.error("No user session found.");
-          return;
-        }
-
-        const userId = session.user.id;
-        const res = await fetch(`/api/forms/submissions?userId=${userId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          setFormsWithSubmissions(data);
-        } else {
-          throw new Error("Failed to fetch submissions.");
-        }
-      } catch (error) {
-        console.error("Error fetching submissions:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load submissions.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (!session) {
+        console.error("No user session found.");
+        return;
       }
-    };
 
+      const userId = session.user.id;
+      const res = await fetch(`/api/forms/submissions?userId=${userId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      console.log({ data });
+
+      if (res.ok) {
+        setFormsWithSubmissions(data);
+      } else {
+        throw new Error("Failed to fetch submissions.");
+      }
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load submissions.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSubmissions();
-  }, []);
+  });
 
   if (loading) {
     return <p>Loading submissions...</p>;
