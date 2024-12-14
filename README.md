@@ -1,152 +1,158 @@
-# Form Craft
+# FormCraft - README
 
-Welcome to the **Form Craft** project! This is a web application designed for creating, managing, and submitting forms. This README provides instructions on how to set up the project locally, details of its API, and guidelines for contributing.
+## Project Overview
 
----
+FormCraft is a versatile platform for creating, managing, and submitting forms. It supports features like user authentication, form duplication, tracking submission counts, and more.
 
-## Live Demo
+Live URL: [FormCraft](https://form-craft-eight.vercel.app)
 
-The live application is deployed at: **[Form Craft on Vercel](https://form-craft-eight.vercel.app)**
+## Features
 
----
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (version 18 or higher)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- (Optional) [Docker](https://www.docker.com/)
+- Create and manage forms.
+- User authentication via Supabase.
+- Real-time tracking of form submissions.
+- Clone (duplicate) forms.
+- Responsive design for desktop and mobile.
 
 ---
 
 ## Running the Project Locally
 
-### 1. Clone the Repository
+### Prerequisites
+
+1. Node.js (v18 or higher)
+2. npm or yarn
+3. Supabase Project
+4. Docker (optional, for containerized deployment)
+
+### Environment Variables
+
+Create a `.env.local` file in the root of the project and populate it with the following values:
 
 ```bash
-git clone https://github.com/zenrsr/form-craft.git
-cd form-craft
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+NEXT_PUBLIC_SUPABASE_PROJECT_REF=your_project_ref
 ```
 
-### 2. Install Dependencies
+### Installation
 
-Install all necessary packages using npm or yarn:
+1. Clone the repository:
 
-```bash
-npm install
-# OR
-yarn install
-```
+   ```bash
+   git clone https://github.com/zenrsr/form-craft.git
+   cd form-craft
+   ```
 
-### 3. Set Up Environment Variables
+2. Install dependencies:
 
-Create a `.env.local` file in the root of the project and configure the following variables:
+   ```bash
+   npm install
+   ```
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
-NEXT_PUBLIC_SUPABASE_PROJECT_REF=<your-supabase-project-ref>
-```
+3. Run the development server:
 
-Make sure these variables match your Supabase project settings.
+   ```bash
+   npm run dev
+   ```
 
-### 4. Start the Development Server
+4. Visit the application in your browser:
+   ```
+   http://localhost:3000
+   ```
 
-Run the application locally:
+### Using Docker (Optional)
 
-```bash
-npm run dev
-# OR
-yarn dev
-```
+To run the project using Docker:
 
-Access the application at [http://localhost:3000](http://localhost:3000).
+1. Build the Docker image:
 
----
+   ```bash
+   docker build -t form-craft .
+   ```
 
-## Running with Docker (Optional)
+2. Run the Docker container:
 
-### 1. Build the Docker Image
+   ```bash
+   docker run -p 3000:3000 --env-file .env.local form-craft
+   ```
 
-```bash
-docker build -t form-craft .
-```
-
-### 2. Run the Docker Container
-
-```bash
-docker run -p 3000:3000 --env-file .env.local form-craft
-```
-
-Access the application at [http://localhost:3000](http://localhost:3000).
+3. Visit the application in your browser:
+   ```
+   http://localhost:3000
+   ```
 
 ---
 
 ## API Documentation
 
-The following API routes are available:
+### Base URL
 
-### **1. Save Form**
+The live base URL for all API requests:
 
-**POST** `/api/forms/save`
+```
+https://form-craft-eight.vercel.app/api
+```
 
-- **Description**: Saves a new form or duplicates an existing form.
-- **Request Body**:
+### Authentication
+
+The app uses Supabase for user authentication. Ensure you include the necessary cookies for authenticated routes.
+
+### Endpoints
+
+#### 1. **Create a Form**
+
+- **URL**: `/forms/save`
+- **Method**: POST
+- **Headers**: `Content-Type: application/json`
+- **Body**:
   ```json
   {
     "title": "Form Title",
     "description": "Form Description",
-    "fields": [{ "label": "Field Label", "type": "text", "required": true }]
+    "fields": [
+      { "label": "Email", "type": "email", "required": true },
+      { "label": "Name", "type": "text", "required": true }
+    ]
   }
   ```
 - **Response**:
   ```json
   {
     "success": true,
-    "form": {
-      "id": "123",
-      "title": "Form Title",
-      "description": "Form Description",
-      "fields": [ ... ]
-    }
+    "form": { "id": "form_id", "title": "Form Title" }
   }
   ```
 
----
+#### 2. **Fetch Forms**
 
-### **2. List Forms**
-
-**GET** `/api/forms/list`
-
-- **Description**: Retrieves a list of all forms created by the user.
+- **URL**: `/forms/list`
+- **Method**: GET
+- **Headers**: Authenticated cookies required.
 - **Response**:
   ```json
   [
     {
-      "id": "123",
+      "id": "form_id",
       "title": "Form Title",
-      "description": "Form Description",
-      "fields": [ ... ],
-      "submissionCount": 10
+      "submissions": 10
     }
   ]
   ```
 
----
+#### 3. **Submit a Form**
 
-### **3. Submit Form**
-
-**POST** `/api/forms/submit`
-
-- **Description**: Submits responses to a form.
-- **Request Body**:
+- **URL**: `/forms/submit`
+- **Method**: POST
+- **Headers**: `Content-Type: application/json`
+- **Body**:
   ```json
   {
-    "formId": "123",
+    "formId": "form_id",
     "responses": {
-      "FieldID": "Response",
-      "AnotherFieldID": "Another Response"
+      "field_id_1": "user response",
+      "field_id_2": "user response"
     }
   }
   ```
@@ -154,49 +160,92 @@ The following API routes are available:
   ```json
   {
     "success": true,
-    "submissionId": "456"
+    "submissionId": "submission_id"
   }
   ```
 
----
+#### 4. **Duplicate a Form**
 
-### **4. Get Form Details**
-
-**GET** `/api/forms/:formId`
-
-- **Description**: Fetches details of a specific form by ID.
+- **URL**: `/forms/save`
+- **Method**: POST
+- **Headers**: `Content-Type: application/json`
+- **Body**:
+  ```json
+  {
+    "title": "Form Title (Copy)",
+    "description": "Form Description",
+    "fields": [
+      { "label": "Email", "type": "email", "required": true },
+      { "label": "Name", "type": "text", "required": true }
+    ]
+  }
+  ```
 - **Response**:
   ```json
   {
-    "id": "123",
-    "title": "Form Title",
-    "description": "Form Description",
-    "fields": [ ... ]
+    "success": true,
+    "form": { "id": "form_id_copy", "title": "Form Title (Copy)" }
   }
   ```
 
 ---
 
-### Postman Collection
+## Testing API Endpoints with Postman
 
-Use the following steps to test the API using Postman:
+### Steps to Test
 
-1. Download the Postman collection: **[Postman Collection](https://example.com/form-craft-postman.json)**.
-2. Import it into Postman.
-3. Configure the environment variables (e.g., `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+1. **Download and Install Postman**:
+
+   - [Download Postman](https://www.postman.com/downloads/)
+
+2. **Create a New Collection**:
+
+   - Open Postman and create a new collection named "FormCraft API".
+
+3. **Set Up Base URL**:
+
+   - Use the base URL `https://form-craft-eight.vercel.app/api` for all endpoints.
+
+4. **Add Requests**:
+
+   - Add requests for each API endpoint as described in the documentation above.
+   - Example:
+     - **Name**: `Create a Form`
+     - **Method**: POST
+     - **URL**: `/forms/save`
+     - **Headers**: `Content-Type: application/json`
+     - **Body**:
+       ```json
+       {
+         "title": "Sample Form",
+         "description": "This is a sample form",
+         "fields": [{ "label": "Email", "type": "email", "required": true }]
+       }
+       ```
+
+5. **Include Authentication**:
+
+   - For authenticated endpoints, ensure cookies are captured by logging into the application in your browser and importing cookies into Postman.
+     - Go to **Postman Settings > Cookies**.
+     - Import cookies for the domain `https://form-craft-eight.vercel.app`.
+
+6. **Send Requests**:
+   - Click **Send** to test the API endpoints and verify responses.
+
+### Saving and Exporting the Collection
+
+1. After configuring all endpoints, save the collection.
+2. Export the collection for sharing or reusability:
+   - Click on the collection.
+   - Click **Export**.
+   - Save the JSON file for sharing.
 
 ---
 
-## Contribution
+## Support
 
-We welcome contributions! Please follow the steps below:
-
-1. Fork the repository.
-2. Create a new branch: `git checkout -b feature/your-feature`.
-3. Commit your changes: `git commit -m 'Add a new feature'`.
-4. Push to the branch: `git push origin feature/your-feature`.
-5. Open a pull request.
+For issues or support, please reach out via GitHub issues.
 
 ---
 
-For any issues or support, contact **support@formcraft.com**.
+Happy Coding!
