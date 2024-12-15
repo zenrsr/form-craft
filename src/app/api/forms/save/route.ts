@@ -34,7 +34,6 @@ export async function POST(req: Request) {
 
     // Parse request body
     const { title, description, fields } = await req.json();
-    console.log("Received form data:", { title, description, fields });
     if (!title || !fields || fields.length === 0) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }

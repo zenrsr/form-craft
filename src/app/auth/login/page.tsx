@@ -30,7 +30,6 @@ import { SocialLogin } from "@/components/shared/SocialLogin";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
-import { fetchSession } from "@/lib/supabaseSessionHelper";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -159,14 +158,7 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-4">
-            {/* <Link
-              href="/forgot-password"
-              className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-            >
-              Forgot password?
-            </Link> */}
-          </div>
+          <div className="mt-4"></div>
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
