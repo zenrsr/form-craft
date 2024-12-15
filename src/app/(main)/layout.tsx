@@ -135,7 +135,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </SidebarBody>
       </DashboardSidebar>
-      {children}
+      <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+        {children}
+      </div>
     </div>
   );
 };

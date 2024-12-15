@@ -31,11 +31,6 @@ export default function PublicFormPage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    console.log("Responses:", responses);
-    console.log("Errors:", errors);
-  }, [responses, errors]);
-
-  useEffect(() => {
     const fetchForm = async () => {
       try {
         const res = await fetch(`/api/share/${urlId}`);
@@ -62,7 +57,6 @@ export default function PublicFormPage() {
   const cleanResponses = Object.fromEntries(
     Object.entries(responses).map(([key, value]) => {
       if (Array.isArray(value)) {
-        // Filter out empty objects in arrays (e.g., for checkbox responses)
         const filtered = value.filter((item) => Object.keys(item).length > 0);
         return [key, filtered];
       }
@@ -88,7 +82,7 @@ export default function PublicFormPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           urlId,
-          responses: cleanResponses, // Use cleaned responses
+          responses: cleanResponses,
         }),
       });
 
@@ -395,6 +389,7 @@ export default function PublicFormPage() {
         }}
         className="space-y-6"
       >
+        {console.log("form fields from share/urlId", form.fields)}
         {form.fields.map((field: any) => (
           <div key={field.id} className="space-y-2">
             {field.type !== "heading" &&

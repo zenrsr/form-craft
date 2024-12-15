@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         urlId: forms.urlId,
         createdAt: forms.createdAt,
         submissionCount: sql<number>`COUNT(${submissions.id})`,
+        fields: forms.fields,
       })
       .from(forms)
       .leftJoin(submissions, eq(forms.id, submissions.formId))
@@ -35,7 +36,8 @@ export async function GET(req: NextRequest) {
         forms.title,
         forms.description,
         forms.urlId,
-        forms.createdAt
+        forms.createdAt,
+        forms.fields
       )
       .orderBy(desc(forms.createdAt));
 

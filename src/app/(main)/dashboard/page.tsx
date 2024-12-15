@@ -9,11 +9,22 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { Card } from "@/components/ui/card";
 
+type FormField = {
+  id: string;
+  type: string;
+  label: string;
+  required: boolean;
+  options?: Array<string> | null[];
+  file?: File | null;
+  previewUrl?: string | null;
+  price?: number;
+};
+
 export interface Form {
   id: number;
   title: string;
   description: string;
-  fields: any[]; // Added fields property
+  fields: FormField[];
   urlId: string;
   createdAt: string;
   submissionCount: number;
@@ -99,13 +110,16 @@ export function SidebarDemo() {
   };
 
   const duplicateForm = async (form: Form) => {
+    console.log("before duplication request", form);
+
+    const { title, description, ...fields } = form;
+
     try {
       const formData = {
-        title: form.title + " (Copy)",
+        title: `${form.title} (Copy)`,
         description: form.description,
-        fields: form.fields,
+        fields: fields,
       };
-
       const res = await fetch("/api/forms/save", {
         method: "POST",
         headers: {
@@ -114,27 +128,23 @@ export function SidebarDemo() {
         body: JSON.stringify(formData),
       });
 
-      console.log("Duplicate Form Response:", res);
-
-      const data = await res.json();
-      console.log("Duplicate Form Response data:", data);
-
-      if (res.ok) {
-        const result = await res.json();
-        console.log("Duplicate Form Result:", result);
-
-        toast({
-          title: "Form duplicated",
-          description: "The form was successfully duplicated.",
-          variant: "default",
-        });
-
-        await fetchForms(); // Refresh forms
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Error duplicating form:", errorData.error);
+        throw new Error(errorData.error || "Failed to duplicate the form.");
       }
 
-      const errorData = await res.json();
-      console.error("Error duplicating form:", errorData.error);
-      throw new Error(errorData.error || "Failed to duplicate the form.");
+      const data = await res.json();
+      console.log("Duplicate Form Response:", data);
+
+      toast({
+        title: "Form duplicated",
+        description: "The form was successfully duplicated.",
+        variant: "default",
+      });
+
+      // Only refetch forms if duplication was successful
+      await fetchForms();
     } catch (error) {
       console.error("Error duplicating form:", error);
       toast({
@@ -201,7 +211,9 @@ export function SidebarDemo() {
                   </Button>
                   <Button
                     variant="secondary"
-                    onClick={() => duplicateForm(form)}
+                    onClick={() => {
+                      duplicateForm(form);
+                    }}
                   >
                     <Copy className="w-4 h-4" />
                     Duplicate
@@ -211,6 +223,7 @@ export function SidebarDemo() {
                     onClick={() => deleteForm(form.id)}
                   >
                     <Trash className="w-4 h-4" />
+                    Delete
                   </Button>
                 </div>
               </li>

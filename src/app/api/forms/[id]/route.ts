@@ -39,7 +39,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params; // Ensure id is accessed asynchronously
+  const { id } = params;
   const numericId = Number(id);
 
   if (isNaN(numericId)) {

@@ -80,8 +80,32 @@ export default function MainSidebar() {
 
   const router = useRouter();
 
+  const validateFields = (fields: Field[]) => {
+    for (const field of fields) {
+      if (["dropdown", "radio", "checkbox"].includes(field.type)) {
+        if (
+          !field.options ||
+          field.options.some((option) => option.trim() === "")
+        ) {
+          toast({
+            title: "Invalid Field",
+            description: `Options for ${field.label} cannot contain empty values`,
+            variant: "destructive",
+          });
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
   const saveForm = async () => {
+    if (!validateFields(fields)) {
+      return;
+    }
+
     const hasEmailField = fields.some((field) => field.type === "email");
+    console.log("Fields:", fields);
 
     if (!hasEmailField) {
       toast({

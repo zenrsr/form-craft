@@ -65,31 +65,33 @@ export default function EditForm() {
   const router = useRouter();
   const { id } = useParams();
 
-  // Fetch form data by ID
-  useEffect(() => {
-    const fetchForm = async () => {
-      try {
-        const res = await fetch(`/api/forms/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setFormTitle(data.title);
-          setFormDescription(data.description);
-          setFields(data.fields);
-        } else {
-          throw new Error("Failed to load form data.");
-        }
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description:
-            error.message || "An error occurred while loading the form.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchForm = async () => {
+    try {
+      const res = await fetch(`/api/forms/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        const { title, description, fields } = data;
 
+        console.log(fields);
+        setFormTitle(title);
+        setFormDescription(description);
+        setFields(fields);
+      } else {
+        throw new Error("Failed to load form data.");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error.message || "An error occurred while loading the form.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchForm();
   }, [id]);
 
@@ -456,14 +458,16 @@ export default function EditForm() {
     <div className="p-4 border rounded bg-gray-100">
       <h2 className="text-lg font-bold">{formTitle}</h2>
       <p className="text-sm mb-4 text-gray-600">{formDescription}</p>
-      {fields.map((field) => (
-        <div key={field.id} className="mb-4">
-          {field.type !== "heading" &&
-            field.type !== "page_break" &&
-            field.type !== "divider" && (
-              <label className="block font-medium mb-2">{field.label}</label>
+      {fields.map((fieldItem) => (
+        <div key={fieldItem.id} className="mb-4">
+          {fieldItem.type !== "heading" &&
+            fieldItem.type !== "page_break" &&
+            fieldItem.type !== "divider" && (
+              <label className="block font-medium mb-2">
+                {fieldItem.label}
+              </label>
             )}
-          {renderPreviewField(field)}
+          {renderPreviewField(fieldItem)}
         </div>
       ))}
       <Button className="w-full mt-4" onClick={() => alert("Form Submitted!")}>
