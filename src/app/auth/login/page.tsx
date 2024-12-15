@@ -30,6 +30,7 @@ import { SocialLogin } from "@/components/shared/SocialLogin";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
+import { fetchSession } from "@/lib/supabaseSessionHelper";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -67,6 +68,8 @@ export default function LoginPage() {
         return;
       }
 
+      console.log("User session:", data.session);
+
       // Call the API to set the auth token
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -85,7 +88,7 @@ export default function LoginPage() {
         });
 
         // Redirect to dashboard after login
-        router.push("/dashboard");
+        router.replace("/dashboard");
       } else {
         toast({
           title: "Error",

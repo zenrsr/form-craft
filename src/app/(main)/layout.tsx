@@ -16,7 +16,7 @@ import {
 } from "@/components/dashboard-sidebar/dashboard-sidebar";
 import { Pickaxe } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { fetchSession } from "@/lib/supabaseSessionHelper";
 
 export interface FormField {
   id: string;
@@ -43,18 +43,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      const session = await fetchSession();
 
-      if (error) {
-        console.error("Error fetching user:", error);
-        return;
-      }
+      console.log(session.email);
 
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
+      if (session.email) {
+        setUserEmail(session.email);
       } else {
         console.error("No email found in session.");
       }
@@ -64,12 +58,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error during logout:", error);
-    } else {
-      router.push("/auth/login"); // Redirect to login page
-    }
+    router.replace("/auth/login");
   };
 
   const Dashboardlinks = [

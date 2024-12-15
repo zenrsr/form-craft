@@ -1,3 +1,5 @@
+// src/app/api/forms/list/route.ts
+
 import { db } from "@/db/db";
 import { forms, submissions } from "@/db/schema";
 import { fetchSession } from "@/lib/supabaseSessionHelper";

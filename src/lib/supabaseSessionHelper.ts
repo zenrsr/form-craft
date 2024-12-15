@@ -1,3 +1,5 @@
+// src/lib/supabaseSessionHelper.ts
+"use server";
 import { headers } from "next/headers";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;

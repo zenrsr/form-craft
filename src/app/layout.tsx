@@ -6,6 +6,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { fetchSession } from "@/lib/supabaseSessionHelper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,15 +30,15 @@ export default function RootLayout({
 
   useEffect(() => {
     const checkSession = async () => {
-      const token = localStorage.getItem("auth-token");
+      const session = await fetchSession();
 
       const isUnprotectedRoute =
         pathname === "/" ||
         pathname.startsWith("/auth") ||
         pathname.startsWith("/share");
 
-      if (!token && !isUnprotectedRoute) {
-        router.replace("/auth/login");
+      if (!session.id && !isUnprotectedRoute) {
+        router.replace("/auth/signup");
         setIsAuthenticated(false);
       } else {
         setIsAuthenticated(true);
@@ -46,10 +47,6 @@ export default function RootLayout({
 
     checkSession();
   }, [router, pathname]);
-
-  // if (isAuthenticated === null) {
-  //   return <p>Loading...</p>;
-  // }
 
   return (
     <html lang="en">
